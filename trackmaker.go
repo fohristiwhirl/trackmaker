@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -123,9 +125,14 @@ func (instrument *Instrument) addfile(notestring string, filename string) {
 }
 
 
-func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, s_loc uint32, notestring string) {
+func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) {
 
 	note := name_to_midi(notestring)	// A number between 0 and 108 (MIDI value corresponding to note)
+
+	if note == 0 {
+		fmt.Fprintf(os.Stderr, "insert() was sent an invalid note")
+		return
+	}
 
 	if i.notes[note] == nil {
 
@@ -164,22 +171,38 @@ func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, s_loc uint32, notes
 		i.notes[note] = i.notes[note_to_stretch].StretchedRelative(ref_freq / ins_freq)
 	}
 
-	wav.Add(t_loc, i.notes[note], s_loc, i.notes[note].FrameCount())
+	wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount())
 }
 
 
 func main() {
+
+	score_file, err := os.Open("score.txt")
+	if err != nil {
+		panic("couldn't read score")
+	}
+
+	score, _ := ioutil.ReadAll(score_file)
+	score_file.Close()
+
+	output := wavmaker.New(44100 * 7)
+
 	var piano Instrument
 	piano.addfile("G4", "piano.ff.G4.wav")
 
-	output := wavmaker.New(44100 * 3)
+	lines := bytes.Split(score, []byte("\n"))
 
-	for i, s := range []string{"C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"} {
+	for i, line := range lines {
+
 		pos := uint32(i) * 11025
-		piano.insert(output, pos, 0, s)
+
+		notes := bytes.Fields(line)
+
+		for _, note := range notes {
+			piano.insert(output, pos, string(note))
+		}
 	}
 
 	output.Fade(0.1)
-
 	output.Save("realtest.wav")
 }
