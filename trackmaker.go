@@ -172,12 +172,14 @@ func main() {
 	var piano Instrument
 	piano.addfile("G4", "piano.ff.G4.wav")
 
-	output := wavmaker.New(44100 * 5)
+	output := wavmaker.New(44100 * 3)
 
 	for i, s := range []string{"C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"} {
 		pos := uint32(i) * 11025
 		piano.insert(output, pos, 0, s)
 	}
+
+	output.Fade(0.1)
 
 	output.Save("realtest.wav")
 }
