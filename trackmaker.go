@@ -35,6 +35,17 @@ type Instrument struct {
 	ready bool
 }
 
+type Settings struct {
+	line uint32					// current line in score
+	instrument_name string
+	volume float64
+	position uint32				// in samples
+	jump uint32
+}
+
+var instruments = make(map[string]*Instrument)
+var default_instrument_name string
+
 
 func name_to_midi(name string) (int, error) {
 
@@ -112,7 +123,6 @@ func name_to_midi(name string) (int, error) {
 }
 
 
-
 func (instrument *Instrument) addfile(notestring string, filename string) error {
 
 	note, err := name_to_midi(notestring)
@@ -188,12 +198,6 @@ func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) 
 
 func main() {
 
-	var scanner *bufio.Scanner
-	var output *wavmaker.WAV
-	var piano Instrument
-
-	// -------------------------------------
-
 	if len(os.Args) != 2 {
 		fmt.Fprintf(os.Stderr, "Usage: %s directory\n", filepath.Base(os.Args[0]))
 		os.Exit(1)
@@ -204,69 +208,141 @@ func main() {
 		os.Exit(1)
 	}
 
-	// -------------------------------------
+	load_instruments("instruments.txt")
+	score_to_wav("score.txt")
+}
 
-	instruments_file, err := os.Open("instruments.txt")
+
+func load_instruments(filename string) {
+
+	var scanner *bufio.Scanner
+
+	instruments_file, err := os.Open(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't read instruments.txt\n")
+		fmt.Fprintf(os.Stderr, "Couldn't read %s\n", filename)
 		os.Exit(1)
 	}
 	defer instruments_file.Close()
-
-	score_file, err := os.Open("score.txt")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't read score.txt\n")
-		os.Exit(1)
-	}
-	defer score_file.Close()
-
-	// -------------------------------------
 
 	scanner = bufio.NewScanner(instruments_file)
 
 	for scanner.Scan() {
 		fields := strings.Fields(scanner.Text())
-		if len(fields) == 2 {
-			err = piano.addfile(fields[0], fields[1])
+		if len(fields) == 3 {
+
+			insname, notename, filename := fields[0], fields[1], fields[2]
+
+			// Format is:    piano G4 piano.ff.G4.wav
+
+			if default_instrument_name == "" {
+				default_instrument_name = insname
+			}
+
+			ins, ok := instruments[insname]
+			if ok == false {
+				ins = new(Instrument)
+				instruments[insname] = ins
+			}
+
+			err = ins.addfile(notename, filename)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Couldn't add %s to instrument: %v\n", fields[1], err)
+				fmt.Fprintf(os.Stderr, "Couldn't add %s to %s: %v\n", filename, insname, err)
 			}
 		}
 	}
+}
 
-	// -------------------------------------
+
+func score_to_wav(filename string) {
+
+	output, score_file := initial_score_load(filename)
+	defer score_file.Close()
+
+	// Create settings in initial state...
+
+	var settings Settings = Settings{
+		line : 0,
+		instrument_name : default_instrument_name,
+		volume : 1.0,
+		position : 0,
+		jump : 11025,
+	}
+
+	// Parse and add notes...
+
+	scanner := bufio.NewScanner(score_file)
+
+	for scanner.Scan() {
+		fields := strings.Fields(scanner.Text())
+		handle_score_line(&settings, fields, output)
+	}
+
+	// Fadeout and save...
+
+	output.FadeSamples(44100)
+	output.Save("trackmaker_output.wav")
+}
+
+
+func initial_score_load(filename string) (*wavmaker.WAV, *os.File) {
+
+	// Create a wav file with the correct size for the score, and
+	// return a pointer to it as well as a pointer to the score file.
+
+	// Load file...
+
+	score_file, err := os.Open(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Couldn't read %s\n", filename)
+		os.Exit(1)
+	}
+
+	// Count lines...
 
 	total_lines := uint32(0)
 
-	scanner = bufio.NewScanner(score_file)
+	scanner := bufio.NewScanner(score_file)
 
 	for scanner.Scan() {
 		total_lines++
 	}
 
-	output = wavmaker.New(total_lines * 44100 / 4)
+	// Create output wav, and return it, along with the score file
 
-	// -------------------------------------
+	output_wav := wavmaker.New(total_lines * 44100 / 4)
 
-	i := uint32(0)
+	score_file.Seek(0, 0)		// Important: reset score file position
+	return output_wav, score_file
+}
 
-	score_file.Seek(0, 0)						// Reset the file position
-	scanner = bufio.NewScanner(score_file)		// Apparently we also need a new scanner
 
-	for scanner.Scan() {
-		pos := i * 11025
-		notes := strings.Fields(scanner.Text())
-		for _, note := range notes {
-			err = piano.insert(output, pos, note)
-			if err != nil {
-				fmt.Printf("line %d: %v\n", i, err)
-			}
-		}
-		i++
+func insert_by_name(instrument_name string, notename string, target_wav *wavmaker.WAV, pos uint32) error {
+
+	// Get the named instrument from the global instruments map, and insert it into
+	// the wav with the given note by calling the insert() method which does that...
+
+	instrument, ok := instruments[instrument_name]
+	if ok == false {
+		return fmt.Errorf("insert_by_name() couldn't find instrument \"%s\"", instrument_name)
 	}
 
-	// -------------------------------------
+	err := instrument.insert(target_wav, pos, notename)
+	return err
+}
 
-	output.FadeSamples(44100)
-	output.Save("trackmaker_output.wav")
+
+func handle_score_line(settings *Settings, fields []string, output_wav *wavmaker.WAV) {
+
+	// TODO: the meat of the score parser. The score can, conceptually,
+	// change the settings (e.g. the instrument name, volume, speed).
+
+	for _, notename := range fields {
+		err := insert_by_name(settings.instrument_name, notename, output_wav, settings.position)
+		if err != nil {
+			fmt.Printf("line %d: %v\n", settings.line, err)
+		}
+	}
+
+	settings.line += 1
+	settings.position += settings.jump
 }
