@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/fohristiwhirl/wavmaker"
@@ -35,7 +36,7 @@ type Instrument struct {
 	ready bool
 }
 
-type Settings struct {
+type ParserState struct {
 	line uint32					// current line in score
 	instrument_name string
 	volume float64
@@ -136,29 +137,30 @@ func score_to_wav(filename string) {
 	output, score_file := initial_score_load(filename)
 	defer score_file.Close()
 
-	// Create settings in initial state...
-
-	var settings Settings = Settings{
-		line : 0,
-		instrument_name : default_instrument_name,
-		volume : 1.0,
-		position : 0,
-		jump : 11025,
-	}
-
-	// Parse and add notes...
-
+	parser_state := initial_parser_state()
 	scanner := bufio.NewScanner(score_file)
 
 	for scanner.Scan() {
 		fields := strings.Fields(scanner.Text())
-		handle_score_line(&settings, fields, output)
+		handle_score_line(&parser_state, fields, output)
 	}
 
 	// Fadeout and save...
 
 	output.FadeSamples(44100)
 	output.Save("trackmaker_output.wav")
+}
+
+
+func initial_parser_state() ParserState {
+	var s = ParserState{
+			line : 0,
+			instrument_name : default_instrument_name,
+			volume : 1.0,
+			position : 0,
+			jump : 11025,
+	}
+	return s
 }
 
 
@@ -175,26 +177,26 @@ func initial_score_load(filename string) (*wavmaker.WAV, *os.File) {
 		os.Exit(1)
 	}
 
-	// Count lines...
+	// Determine expected WAV length by parsing score and updating a state struct...
 
-	total_lines := uint32(0)
-
+	parser_state := initial_parser_state()
 	scanner := bufio.NewScanner(score_file)
 
 	for scanner.Scan() {
-		total_lines++
+		fields := strings.Fields(scanner.Text())
+		handle_score_line(&parser_state, fields, nil)
 	}
 
 	// Create output wav, and return it, along with the score file
 
-	output_wav := wavmaker.New(total_lines * 44100 / 4)
+	output_wav := wavmaker.New(parser_state.position)
 
 	score_file.Seek(0, 0)		// Important: reset score file position
 	return output_wav, score_file
 }
 
 
-func handle_score_line(settings *Settings, fields []string, output_wav *wavmaker.WAV) {
+func handle_score_line(settings *ParserState, fields []string, output_wav *wavmaker.WAV) {
 
 	// TODO: the meat of the score parser. The score can, conceptually,
 	// change the settings (e.g. the instrument name, volume, speed).
@@ -204,16 +206,39 @@ func handle_score_line(settings *Settings, fields []string, output_wav *wavmaker
 		_, err := name_to_midi(token)	// FIXME: using this function just for its err is crude
 		if err != nil {
 
-			// The token is not a note, but might be a settings change...
-			// TODO
+			// instrument name? ----------------------------------------------------------------
+
+			_, ok := instruments[token]
+			if ok {
+				settings.instrument_name = token
+				continue
+			}
+
+			// jump setting? (i.e. frames between notes) ---------------------------------------
+
+			if strings.HasPrefix(token, "j:") {
+				j, err := strconv.Atoi(token[2:])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", settings.line, token)
+				} else {
+					settings.jump = uint32(j)
+				}
+				continue
+			}
+
+			// We didn't figure out what the token means ---------------------------------------
+
+			fmt.Fprintf(os.Stderr, "line %d: unknown token \"%s\"\n", settings.line, token)
 
 		} else {
 
 			// The token is a note...
 
-			err = insert_by_name(settings.instrument_name, token, output_wav, settings.position)
-			if err != nil {
-				fmt.Printf("line %d: %v\n", settings.line, err)
+			if output_wav != nil {
+				err = insert_by_name(settings.instrument_name, token, output_wav, settings.position)
+				if err != nil {
+					fmt.Printf("line %d: %v\n", settings.line, err)
+				}
 			}
 		}
 	}
