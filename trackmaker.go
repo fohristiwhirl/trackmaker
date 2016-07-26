@@ -252,6 +252,18 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 				continue
 			}
 
+			// volume setting? (as a float where 1.0 means normal) ----------------------------- e.g. v:0.5
+
+			if strings.HasPrefix(token, "v:") {
+				v, err := strconv.ParseFloat(token[2:], 64)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", relevant_state.line, token)
+				} else {
+					relevant_state.volume = v
+				}
+				continue
+			}
+
 			// We didn't figure out what the token means ---------------------------------------
 
 			fmt.Fprintf(os.Stderr, "line %d: unknown token \"%s\"\n", relevant_state.line, token)
@@ -261,7 +273,7 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 			// The token is a note...
 
 			if output_wav != nil {
-				err = insert_by_name(relevant_state.instrument_name, token, output_wav, relevant_state.position)
+				err = insert_by_name(relevant_state.instrument_name, relevant_state.volume, token, output_wav, relevant_state.position)
 				if err != nil {
 					fmt.Printf("line %d: %v\n", relevant_state.line, err)
 				}
@@ -274,7 +286,7 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 }
 
 
-func insert_by_name(instrument_name string, notename string, target_wav *wavmaker.WAV, t_loc uint32) error {
+func insert_by_name(instrument_name string, volume float64, notename string, target_wav *wavmaker.WAV, t_loc uint32) error {
 
 	// Get the named instrument from the global instruments map,
 	// and insert it into the wav with the given note, creating
@@ -330,7 +342,7 @@ func insert_by_name(instrument_name string, notename string, target_wav *wavmake
 		i.notes[note] = i.notes[note_to_stretch].StretchedRelative(ref_freq / ins_freq)
 	}
 
-	target_wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount())
+	target_wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount(), volume)
 	return nil
 }
 
