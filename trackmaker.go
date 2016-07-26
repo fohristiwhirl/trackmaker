@@ -33,7 +33,7 @@ type Instrument struct {
 }
 
 
-func name_to_midi(name string) int, error {		// Note that, if this returns 0, it means "no note" ; actual MIDI values of 0 are never returned
+func name_to_midi(name string) (int, error) {
 
 	// Accepts notes in the following formats: C4  C4#  C#4  C4b  Cb4
 
@@ -80,7 +80,7 @@ func name_to_midi(name string) int, error {		// Note that, if this returns 0, it
 		case 6:	result = 84		// C6
 		case 7:	result = 96		// C7
 		case 8:	result = 108	// C8
-		default: return 0
+		default: return 0, fmt.Errorf("name_to_midi(%s): note number was wrong", name)
 	}
 
 	// Now we adjust it for the actual note that was requested...
@@ -93,7 +93,7 @@ func name_to_midi(name string) int, error {		// Note that, if this returns 0, it
 		case "G": result += 7
 		case "A": result += 9
 		case "B": result += 11
-		default: return 0
+		default: return 0, fmt.Errorf("name_to_midi(%s): note letter was wrong", name)
 	}
 
 	// Now take into account flat or sharp symbols...
@@ -129,13 +129,11 @@ func (instrument *Instrument) addfile(notestring string, filename string) error 
 }
 
 
-func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) {
+func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) error {
 
-	note := name_to_midi(notestring)	// A number between 0 and 108 (MIDI value corresponding to note)
-
-	if note == 0 {
-		fmt.Fprintf(os.Stderr, "insert() was sent an invalid note")
-		return
+	note, err := name_to_midi(notestring)	// A number between 0 and 108 (MIDI value corresponding to note)
+	if err != nil {
+		return err
 	}
 
 	if i.notes[note] == nil {
@@ -164,8 +162,7 @@ func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) 
 			}
 
 			if a <= 0 && b >= 108 {
-				fmt.Fprintf(os.Stderr, "insert() couldn't find a reference note")
-				return
+				return fmt.Errorf("insert() couldn't find a reference note")
 			}
 		}
 
@@ -176,6 +173,7 @@ func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) 
 	}
 
 	wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount())
+	return nil
 }
 
 
@@ -202,7 +200,10 @@ func main() {
 		pos := uint32(i) * 11025
 		notes := bytes.Fields(line)
 		for _, note := range notes {
-			piano.insert(output, pos, string(note))
+			err = piano.insert(output, pos, string(note))
+			if err != nil {
+				fmt.Printf("line %d: %v\n", i, err)
+			}
 		}
 	}
 
