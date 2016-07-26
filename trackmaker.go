@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fohristiwhirl/wavmaker"
@@ -190,6 +191,18 @@ func main() {
 
 	// -------------------------------------
 
+	if len(os.Args) != 2 {
+		fmt.Fprintf(os.Stderr, "Usage: %s directory\n", filepath.Base(os.Args[0]))
+		os.Exit(1)
+	}
+	err := os.Chdir(os.Args[1])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
+	// -------------------------------------
+
 	instruments_file, err := os.Open("instruments.txt")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Couldn't read instruments.txt\n")
@@ -223,7 +236,7 @@ func main() {
 	total_lines := uint32(0)
 
 	scanner = bufio.NewScanner(score_file)
-	
+
 	for scanner.Scan() {
 		total_lines++
 	}
@@ -252,5 +265,5 @@ func main() {
 	// -------------------------------------
 
 	output.FadeSamples(44100)
-	output.Save("trackmaker_test.wav")
+	output.Save("trackmaker_output.wav")
 }
