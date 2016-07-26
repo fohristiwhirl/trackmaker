@@ -1,4 +1,3 @@
-piano   E3      Piano.ff.E3.wav
 piano   C4      Piano.ff.C4.wav
 piano   G4      Piano.ff.G4.wav
 

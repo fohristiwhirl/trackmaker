@@ -141,8 +141,7 @@ func score_to_wav(filename string) {
 	scanner := bufio.NewScanner(score_file)
 
 	for scanner.Scan() {
-		fields := strings.Fields(scanner.Text())
-		handle_score_line(&parser_state, fields, output)
+		handle_score_line(&parser_state, scanner.Text(), output)
 	}
 
 	// Fadeout and save...
@@ -183,8 +182,7 @@ func initial_score_load(filename string) (*wavmaker.WAV, *os.File) {
 	scanner := bufio.NewScanner(score_file)
 
 	for scanner.Scan() {
-		fields := strings.Fields(scanner.Text())
-		handle_score_line(&parser_state, fields, nil)
+		handle_score_line(&parser_state, scanner.Text(), nil)
 	}
 
 	// Create output wav, and return it, along with the score file
@@ -196,36 +194,49 @@ func initial_score_load(filename string) (*wavmaker.WAV, *os.File) {
 }
 
 
-func handle_score_line(settings *ParserState, fields []string, output_wav *wavmaker.WAV) {
+func handle_score_line(global_state *ParserState, text string, output_wav *wavmaker.WAV) {
 
-	// TODO: the meat of the score parser. The score can, conceptually,
-	// change the settings (e.g. the instrument name, volume, speed).
+	// Since brackets are significant, make sure they are isolated for convenience...
+
+	text = strings.Replace(text, "(", " ( ", -1)
+	text = strings.Replace(text, ")", " ) ", -1)
+
+	fields := strings.Fields(text)
+
+	// When we're inside brackets, we don't change the global state but just a local one.
+	// The pointer "relevant_state" will point to the one currently being updated. Note that
+	// each time we enter brackets, the global state must be copied into the local state.
+	// Only one layer of brackets is allowed (no nesting).
+
+	var local_state *ParserState = new(ParserState)
+
+	var relevant_state *ParserState = global_state
 
 	for _, token := range fields {
 
+		// Deal with brackets first...
+
+		if token == "(" && relevant_state == global_state {
+			*local_state = *global_state	// Copy contents
+			relevant_state = local_state
+			continue
+		}
+
+		if token == ")" && relevant_state == local_state {
+			relevant_state = global_state
+			continue
+		}
+
+		// Branch based on whether the token is a note...
+
 		_, err := name_to_midi(token)	// FIXME: using this function just for its err is crude
 		if err != nil {
-
-			// note with named instrument? ----------------------------------------------------- e.g. drum(C3)
-
-			if strings.Index(token, "(") != -1 && strings.HasSuffix(token, ")") {
-				instrument_name := token[0 : strings.Index(token, "(")]
-				notename := token[strings.Index(token, "(") + 1 : len(token) - 1]
-
-				if output_wav != nil {
-					err = insert_by_name(instrument_name, notename, output_wav, settings.position)
-					if err != nil {
-						fmt.Printf("line %d: %v\n", settings.line, err)
-					}
-				}
-				continue
-			}
 
 			// instrument name? ---------------------------------------------------------------- e.g. piano
 
 			_, ok := instruments[token]
 			if ok {
-				settings.instrument_name = token
+				relevant_state.instrument_name = token
 				continue
 			}
 
@@ -234,32 +245,32 @@ func handle_score_line(settings *ParserState, fields []string, output_wav *wavma
 			if strings.HasPrefix(token, "j:") {
 				j, err := strconv.Atoi(token[2:])
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", settings.line, token)
+					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", relevant_state.line, token)
 				} else {
-					settings.jump = uint32(j)
+					relevant_state.jump = uint32(j)
 				}
 				continue
 			}
 
 			// We didn't figure out what the token means ---------------------------------------
 
-			fmt.Fprintf(os.Stderr, "line %d: unknown token \"%s\"\n", settings.line, token)
+			fmt.Fprintf(os.Stderr, "line %d: unknown token \"%s\"\n", relevant_state.line, token)
 
 		} else {
 
-			// The token is a bare note...
+			// The token is a note...
 
 			if output_wav != nil {
-				err = insert_by_name(settings.instrument_name, token, output_wav, settings.position)
+				err = insert_by_name(relevant_state.instrument_name, token, output_wav, relevant_state.position)
 				if err != nil {
-					fmt.Printf("line %d: %v\n", settings.line, err)
+					fmt.Printf("line %d: %v\n", relevant_state.line, err)
 				}
 			}
 		}
 	}
 
-	settings.line += 1
-	settings.position += settings.jump
+	global_state.line += 1
+	global_state.position += global_state.jump
 }
 
 
