@@ -206,7 +206,22 @@ func handle_score_line(settings *ParserState, fields []string, output_wav *wavma
 		_, err := name_to_midi(token)	// FIXME: using this function just for its err is crude
 		if err != nil {
 
-			// instrument name? ----------------------------------------------------------------
+			// note with named instrument? ----------------------------------------------------- e.g. drum(C3)
+
+			if strings.Index(token, "(") != -1 && strings.HasSuffix(token, ")") {
+				instrument_name := token[0 : strings.Index(token, "(")]
+				notename := token[strings.Index(token, "(") + 1 : len(token) - 1]
+
+				if output_wav != nil {
+					err = insert_by_name(instrument_name, notename, output_wav, settings.position)
+					if err != nil {
+						fmt.Printf("line %d: %v\n", settings.line, err)
+					}
+				}
+				continue
+			}
+
+			// instrument name? ---------------------------------------------------------------- e.g. piano
 
 			_, ok := instruments[token]
 			if ok {
@@ -214,7 +229,7 @@ func handle_score_line(settings *ParserState, fields []string, output_wav *wavma
 				continue
 			}
 
-			// jump setting? (i.e. frames between notes) ---------------------------------------
+			// jump setting? (i.e. frames between notes) --------------------------------------- e.g. j:5000
 
 			if strings.HasPrefix(token, "j:") {
 				j, err := strconv.Atoi(token[2:])
@@ -232,7 +247,7 @@ func handle_score_line(settings *ParserState, fields []string, output_wav *wavma
 
 		} else {
 
-			// The token is a note...
+			// The token is a bare note...
 
 			if output_wav != nil {
 				err = insert_by_name(settings.instrument_name, token, output_wav, settings.position)

@@ -1,41 +1,69 @@
-C4              j:10000
-
-E4
-
+piano C5 drum(C3)   j:6500
 G4
-
+E4
+G4
+C5  drum(C3)
+G4
+E4
+G4
+C5  drum(C3)    j:6000
+G4
+E4
+G4
+C5  drum(C3)
+G4
+E4
+G4
+D4  drum(C3)    j:5500
 C5
-
-C4
-E4
-G4
-C4 E4 G4 C5     j:5000
 B4
 A4
-G4
+G4  drum(C3)
 F4
 E4
 D4
+E4  drum(C3)    j:5000
 C4
+D4
+E4
+F4  drum(C3)
+G4
+A4
+B4
+C5  drum(C3)    j:4500
+G4
+E4
+G4
+C5  drum(C3)
+G4
+E4
+G4
+C5  drum(C3)    j:4000
+G4
+E4
+G4
+C5  drum(C3)
+G4
+E4
+G4
+D4  drum(C3)    j:3500
+C5
+B4
+A4
+G4  drum(C3)
 F4
 E4
 D4
+E4  drum(C3)    j:3000
 C4
-B4
-A4
+D4
+E4
+F4  drum(C3)
 G4
-C4 E4 G4 C5
-
-C4 E4 G4 C5
-C4 E4 G4 C5
-
+A4
+B4
+C3 G3 C4 E4 G4 C5   drum(C3)
 
 
 
-
-
-
-
-
-
-
+j:80000
