@@ -71,58 +71,6 @@ func (instrument *Instrument) addfile(notestring string, filename string) error 
 }
 
 
-func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) error {
-
-	if i.ready == false {
-		return fmt.Errorf("insert() called on an empty instrument")
-	}
-
-	note, err := name_to_midi(notestring)	// A number between 0 and 127 (MIDI value corresponding to note)
-	if err != nil {
-		return err
-	}
-
-	if i.notes[note] == nil {
-
-		a := int(note)
-		b := int(note)
-
-		note_to_stretch := 0
-
-		for {			// Find reference note (one with its flag set) which was loaded from a file
-			a--
-			b++
-
-			if a >= 0 {
-				if i.flags[a] {
-					note_to_stretch = a
-					break
-				}
-			}
-
-			if b <= 127 {
-				if i.flags[b] {
-					note_to_stretch = b
-					break
-				}
-			}
-
-			if a <= 0 && b >= 127 {
-				return fmt.Errorf("insert() couldn't find a reference note")	// Should be impossible
-			}
-		}
-
-		ins_freq := midi_freq[note]
-		ref_freq := midi_freq[note_to_stretch]
-
-		i.notes[note] = i.notes[note_to_stretch].StretchedRelative(ref_freq / ins_freq)
-	}
-
-	wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount())
-	return nil
-}
-
-
 // ---------------------------------------------------------- FUNCTIONS
 
 
@@ -251,10 +199,22 @@ func handle_score_line(settings *Settings, fields []string, output_wav *wavmaker
 	// TODO: the meat of the score parser. The score can, conceptually,
 	// change the settings (e.g. the instrument name, volume, speed).
 
-	for _, notename := range fields {
-		err := insert_by_name(settings.instrument_name, notename, output_wav, settings.position)
+	for _, token := range fields {
+
+		_, err := name_to_midi(token)	// FIXME: using this function just for its err is crude
 		if err != nil {
-			fmt.Printf("line %d: %v\n", settings.line, err)
+
+			// The token is not a note, but might be a settings change...
+			// TODO
+
+		} else {
+
+			// The token is a note...
+
+			err = insert_by_name(settings.instrument_name, token, output_wav, settings.position)
+			if err != nil {
+				fmt.Printf("line %d: %v\n", settings.line, err)
+			}
 		}
 	}
 
@@ -263,18 +223,64 @@ func handle_score_line(settings *Settings, fields []string, output_wav *wavmaker
 }
 
 
-func insert_by_name(instrument_name string, notename string, target_wav *wavmaker.WAV, pos uint32) error {
+func insert_by_name(instrument_name string, notename string, target_wav *wavmaker.WAV, t_loc uint32) error {
 
-	// Get the named instrument from the global instruments map, and insert it into
-	// the wav with the given note by calling the insert() method which does that...
+	// Get the named instrument from the global instruments map,
+	// and insert it into the wav with the given note, creating
+	// that note if needed...
 
-	instrument, ok := instruments[instrument_name]
+	i, ok := instruments[instrument_name]
 	if ok == false {
 		return fmt.Errorf("insert_by_name() couldn't find instrument \"%s\"", instrument_name)
 	}
 
-	err := instrument.insert(target_wav, pos, notename)
-	return err
+	if i.ready == false {
+		return fmt.Errorf("insert_by_name() called on an empty instrument")
+	}
+
+	note, err := name_to_midi(notename)		// A number between 0 and 127 (MIDI value corresponding to note)
+	if err != nil {
+		return fmt.Errorf("insert_by_name(): %v", err)
+	}
+
+	if i.notes[note] == nil {
+
+		a := int(note)
+		b := int(note)
+
+		note_to_stretch := 0
+
+		for {		// Find reference note (one with its flag set) which was loaded from a file
+			a--
+			b++
+
+			if a >= 0 {
+				if i.flags[a] {
+					note_to_stretch = a
+					break
+				}
+			}
+
+			if b <= 127 {
+				if i.flags[b] {
+					note_to_stretch = b
+					break
+				}
+			}
+
+			if a <= 0 && b >= 127 {
+				return fmt.Errorf("insert() couldn't find a reference note")	// Should be impossible
+			}
+		}
+
+		ins_freq := midi_freq[note]
+		ref_freq := midi_freq[note_to_stretch]
+
+		i.notes[note] = i.notes[note_to_stretch].StretchedRelative(ref_freq / ins_freq)
+	}
+
+	target_wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount())
+	return nil
 }
 
 
