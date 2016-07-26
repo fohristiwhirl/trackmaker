@@ -33,7 +33,7 @@ type Instrument struct {
 }
 
 
-func name_to_midi(name string) int {		// Note that, if this returns 0, it means "no note" ; actual MIDI values of 0 are never returned
+func name_to_midi(name string) int, error {		// Note that, if this returns 0, it means "no note" ; actual MIDI values of 0 are never returned
 
 	// Accepts notes in the following formats: C4  C4#  C#4  C4b  Cb4
 
@@ -43,7 +43,7 @@ func name_to_midi(name string) int {		// Note that, if this returns 0, it means 
 	if len(name) == 2 {
 		letter = string(name[0])
 		letter = strings.ToUpper(letter)
-		number = int(name[1]) - 48						// -48 is conversion of ASCII to int
+		number = int(name[1]) - 48				// -48 is conversion of ASCII to int
 	} else if len(name) == 3 {
 		letter = string(name[0])
 		letter = strings.ToUpper(letter)
@@ -62,10 +62,10 @@ func name_to_midi(name string) int {		// Note that, if this returns 0, it means 
 				accidental = -1
 			}
 		} else {
-			return 0									// How we deal with errors in this function...
+			return 0, fmt.Errorf("name_to_midi(%s): string format was wrong", name)
 		}
 	} else {
-		return 0
+		return 0, fmt.Errorf("name_to_midi(%s): string length was wrong", name)
 	}
 
 	// First we set the result as if we asked for C in the relevant octave...
@@ -101,27 +101,31 @@ func name_to_midi(name string) int {		// Note that, if this returns 0, it means 
 	result += accidental
 
 	if result < 0 || result >= 109 {
-		return 0
+		return 0, fmt.Errorf("name_to_midi(%s): resulting note out of range 0-108", name)
 	}
 
-	return result
+	return result, nil
 }
 
 
 
-func (instrument *Instrument) addfile(notestring string, filename string) {
+func (instrument *Instrument) addfile(notestring string, filename string) error {
 
-	note := name_to_midi(notestring)
+	note, err := name_to_midi(notestring)
+	if err != nil {
+		return err
+	}
 
 	wav, err := wavmaker.Load(filename)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't load instrument file '%s'\n", filename)
-		os.Exit(1)
+		return err
 	}
 
 	instrument.notes[note] = wav
 	instrument.flags[note] = true
+
+	return nil
 }
 
 
@@ -181,23 +185,22 @@ func main() {
 	if err != nil {
 		panic("couldn't read score")
 	}
-
 	score, _ := ioutil.ReadAll(score_file)
 	score_file.Close()
 
 	var piano Instrument
-	piano.addfile("G4", "piano.ff.G4.wav")
+	err = piano.addfile("G4", "piano.ff.G4.wav")
+	if err != nil {
+		panic("couldn't add sample to instrument")
+	}
 
 	lines := bytes.Split(score, []byte("\n"))
 
 	output := wavmaker.New(uint32(44100 * len(lines) / 4))
 
 	for i, line := range lines {
-
 		pos := uint32(i) * 11025
-
 		notes := bytes.Fields(line)
-
 		for _, note := range notes {
 			piano.insert(output, pos, string(note))
 		}
