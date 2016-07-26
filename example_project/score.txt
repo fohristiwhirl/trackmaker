@@ -1,69 +1,64 @@
-piano v:0.2 C5   (drum v:0.9 C3)   j:6500
+piano v:0.8 C5 G4           j:8000       (drum C3)
 G4
 E4
 G4
-C5  (drum v:0.85 C3)
+C5
+G4
+E4 G4
+G4 G4
+C5 C4           (drum C3)   j:7500
 G4
 E4
 G4
-C5  v:0.3   (drum v:0.8 C3)    j:6000
+C5 E4
 G4
-E4
-G4
-C5  (drum v:0.75 C3)
-G4
-E4
-G4
-D4  v:0.4   (drum v:0.7 C3)    j:5500
+E4 G4
+G4 E4
+D4 A3           (drum C3)   j:7000
 C5
 B4
 A4
-G4  (drum v:0.65 C3)
+G4 G3
 F4
 E4
-D4
-E4  v:0.5   (drum v:0.6 C3)    j:5000
+D4 F3
+E4 E3           (drum C3)   j:6500
 C4
 D4
 E4
-F4  (drum v:0.55 C3)
+F4              (drum C3)
 G4
-A4
+A4              (drum v:1.5 C3)
 B4
-C5  v:0.6   (drum v:0.5 C3)    j:4500
+C5 E4           (drum v:2.0 C3)     j:6000
 G4
 E4
 G4
-C5  (drum v:0.45 C3)
-G4
-E4
-G4
-C5  v:0.7   (drum v:0.4 C3)    j:4000
-G4
-E4
-G4
-C5  (drum v:0.35 C3)
-G4
-E4
-G4
-D4  v:0.8   (drum v:0.3 C3)    j:3500
 C5
-B4
-A4
-G4  (drum v:0.25 C3)
-F4
-E4
-D4
-E4  v:0.9   (drum v:0.2 C3)    j:3000
-C4
-D4
-E4
-F4  (drum v:0.15 C3)
 G4
+E4 E4
+G4 G4
+C5 F4#          (drum C3)   j:5500
+F4#
+D4
+F4#
+C5
 A4
-B4
-C3 G3 C4 E4 G4 C5   (drum v:0.1 C3)
+D4 A4
+A4 A4
+B4 D4           (drum C3)
+A4 C4
+G4 B3
+A4 C4
+D4 F3#          (drum C3)
+
+F4# D4          (drum v:1.5 C3)
+
+G4 B3           (drum v:2.0 C3)
 
 
 
-j:80000
+
+
+
+
