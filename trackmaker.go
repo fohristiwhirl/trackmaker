@@ -185,12 +185,12 @@ func main() {
 	score, _ := ioutil.ReadAll(score_file)
 	score_file.Close()
 
-	output := wavmaker.New(44100 * 7)
-
 	var piano Instrument
 	piano.addfile("G4", "piano.ff.G4.wav")
 
 	lines := bytes.Split(score, []byte("\n"))
+
+	output := wavmaker.New(uint32(44100 * len(lines) / 4))
 
 	for i, line := range lines {
 
@@ -204,5 +204,5 @@ func main() {
 	}
 
 	output.Fade(0.1)
-	output.Save("realtest.wav")
+	output.Save("trackmaker_test.wav")
 }
