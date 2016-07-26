@@ -47,80 +47,7 @@ var instruments = make(map[string]*Instrument)
 var default_instrument_name string
 
 
-func name_to_midi(name string) (int, error) {
-
-	// Accepts notes in the following formats: C4  C4#  C#4  C4b  Cb4
-
-	var result, number, accidental int
-	var letter string
-
-	if len(name) == 2 {
-		letter = string(name[0])
-		letter = strings.ToUpper(letter)
-		number = int(name[1]) - 48				// -48 is conversion of ASCII to int
-	} else if len(name) == 3 {
-		letter = string(name[0])
-		letter = strings.ToUpper(letter)
-		if name[1] == '#' || name[1] == 'b' {
-			number = int(name[2]) - 48
-			if name[1] == '#' {
-				accidental = 1
-			} else {
-				accidental = -1
-			}
-		} else if name[2] == '#' || name[2] == 'b' {
-			number = int(name[1]) - 48
-			if name[2] == '#' {
-				accidental = 1
-			} else {
-				accidental = -1
-			}
-		} else {
-			return 0, fmt.Errorf("name_to_midi(%s): string format was wrong", name)
-		}
-	} else {
-		return 0, fmt.Errorf("name_to_midi(%s): string length was wrong", name)
-	}
-
-	// First we set the result as if we asked for C in the relevant octave...
-
-	switch number {
-		case 0: result = 12		// C0
-		case 1: result = 24		// C1
-		case 2:	result = 36		// C2
-		case 3:	result = 48		// C3
-		case 4:	result = 60		// C4
-		case 5:	result = 72		// C5
-		case 6:	result = 84		// C6
-		case 7:	result = 96		// C7
-		case 8:	result = 108	// C8
-		case 9: result = 120	// C9
-		default: return 0, fmt.Errorf("name_to_midi(%s): note number was wrong", name)
-	}
-
-	// Now we adjust it for the actual note that was requested...
-
-	switch letter {
-		case "C": result += 0
-		case "D": result += 2
-		case "E": result += 4
-		case "F": result += 5
-		case "G": result += 7
-		case "A": result += 9
-		case "B": result += 11
-		default: return 0, fmt.Errorf("name_to_midi(%s): note letter was wrong", name)
-	}
-
-	// Now take into account flat or sharp symbols...
-
-	result += accidental
-
-	if result < 0 || result > 127 {
-		return 0, fmt.Errorf("name_to_midi(%s): resulting note out of range 0-127", name)
-	}
-
-	return result, nil
-}
+// ---------------------------------------------------------- METHODS
 
 
 func (instrument *Instrument) addfile(notestring string, filename string) error {
@@ -194,6 +121,9 @@ func (i *Instrument) insert(wav *wavmaker.WAV, t_loc uint32, notestring string) 
 	wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount())
 	return nil
 }
+
+
+// ---------------------------------------------------------- FUNCTIONS
 
 
 func main() {
@@ -316,6 +246,23 @@ func initial_score_load(filename string) (*wavmaker.WAV, *os.File) {
 }
 
 
+func handle_score_line(settings *Settings, fields []string, output_wav *wavmaker.WAV) {
+
+	// TODO: the meat of the score parser. The score can, conceptually,
+	// change the settings (e.g. the instrument name, volume, speed).
+
+	for _, notename := range fields {
+		err := insert_by_name(settings.instrument_name, notename, output_wav, settings.position)
+		if err != nil {
+			fmt.Printf("line %d: %v\n", settings.line, err)
+		}
+	}
+
+	settings.line += 1
+	settings.position += settings.jump
+}
+
+
 func insert_by_name(instrument_name string, notename string, target_wav *wavmaker.WAV, pos uint32) error {
 
 	// Get the named instrument from the global instruments map, and insert it into
@@ -331,18 +278,77 @@ func insert_by_name(instrument_name string, notename string, target_wav *wavmake
 }
 
 
-func handle_score_line(settings *Settings, fields []string, output_wav *wavmaker.WAV) {
+func name_to_midi(name string) (int, error) {
 
-	// TODO: the meat of the score parser. The score can, conceptually,
-	// change the settings (e.g. the instrument name, volume, speed).
+	// Accepts notes in the following formats: C4  C4#  C#4  C4b  Cb4
 
-	for _, notename := range fields {
-		err := insert_by_name(settings.instrument_name, notename, output_wav, settings.position)
-		if err != nil {
-			fmt.Printf("line %d: %v\n", settings.line, err)
+	var result, number, accidental int
+	var letter string
+
+	if len(name) == 2 {
+		letter = string(name[0])
+		letter = strings.ToUpper(letter)
+		number = int(name[1]) - 48				// -48 is conversion of ASCII to int
+	} else if len(name) == 3 {
+		letter = string(name[0])
+		letter = strings.ToUpper(letter)
+		if name[1] == '#' || name[1] == 'b' {
+			number = int(name[2]) - 48
+			if name[1] == '#' {
+				accidental = 1
+			} else {
+				accidental = -1
+			}
+		} else if name[2] == '#' || name[2] == 'b' {
+			number = int(name[1]) - 48
+			if name[2] == '#' {
+				accidental = 1
+			} else {
+				accidental = -1
+			}
+		} else {
+			return 0, fmt.Errorf("name_to_midi(%s): string format was wrong", name)
 		}
+	} else {
+		return 0, fmt.Errorf("name_to_midi(%s): string length was wrong", name)
 	}
 
-	settings.line += 1
-	settings.position += settings.jump
+	// First we set the result as if we asked for C in the relevant octave...
+
+	switch number {
+		case 0: result = 12		// C0
+		case 1: result = 24		// C1
+		case 2:	result = 36		// C2
+		case 3:	result = 48		// C3
+		case 4:	result = 60		// C4
+		case 5:	result = 72		// C5
+		case 6:	result = 84		// C6
+		case 7:	result = 96		// C7
+		case 8:	result = 108	// C8
+		case 9: result = 120	// C9
+		default: return 0, fmt.Errorf("name_to_midi(%s): note number was wrong", name)
+	}
+
+	// Now we adjust it for the actual note that was requested...
+
+	switch letter {
+		case "C": result += 0
+		case "D": result += 2
+		case "E": result += 4
+		case "F": result += 5
+		case "G": result += 7
+		case "A": result += 9
+		case "B": result += 11
+		default: return 0, fmt.Errorf("name_to_midi(%s): note letter was wrong", name)
+	}
+
+	// Now take into account flat or sharp symbols...
+
+	result += accidental
+
+	if result < 0 || result > 127 {
+		return 0, fmt.Errorf("name_to_midi(%s): resulting note out of range 0-127", name)
+	}
+
+	return result, nil
 }
