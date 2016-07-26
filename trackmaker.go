@@ -83,6 +83,7 @@ func name_to_midi(name string) (int, error) {
 		case 6:	result = 84		// C6
 		case 7:	result = 96		// C7
 		case 8:	result = 108	// C8
+		case 9: result = 120	// C9
 		default: return 0, fmt.Errorf("name_to_midi(%s): note number was wrong", name)
 	}
 
