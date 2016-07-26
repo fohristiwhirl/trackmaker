@@ -185,20 +185,32 @@ func main() {
 	}
 	score, _ := ioutil.ReadAll(score_file)
 	score_file.Close()
+	score_lines := bytes.Split(score, []byte("\n"))
+
+	instruments_file, err := os.Open("instruments.txt")
+	if err != nil {
+		panic("couldn't read instruments file")
+	}
+	instruments, _ := ioutil.ReadAll(instruments_file)
+	instruments_file.Close()
+	ins_lines := bytes.Split(instruments, []byte("\n"))
 
 	var piano Instrument
-	err = piano.addfile("G4", "piano.ff.G4.wav")
-	if err != nil {
-		panic("couldn't add sample to instrument")
+	for _, ins_line := range ins_lines {
+		fields := bytes.Fields(ins_line)
+		if len(fields) == 2 {
+			err = piano.addfile(string(fields[0]), string(fields[1]))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Couldn't add %s to instrument: %v", fields[1], err)
+			}
+		}
 	}
 
-	lines := bytes.Split(score, []byte("\n"))
+	output := wavmaker.New(uint32(44100 * len(score_lines) / 4))
 
-	output := wavmaker.New(uint32(44100 * len(lines) / 4))
-
-	for i, line := range lines {
+	for i, score_line := range score_lines {
 		pos := uint32(i) * 11025
-		notes := bytes.Fields(line)
+		notes := bytes.Fields(score_line)
 		for _, note := range notes {
 			err = piano.insert(output, pos, string(note))
 			if err != nil {
