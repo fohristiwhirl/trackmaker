@@ -201,7 +201,7 @@ func main() {
 		if len(fields) == 2 {
 			err = piano.addfile(string(fields[0]), string(fields[1]))
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Couldn't add %s to instrument: %v", fields[1], err)
+				fmt.Fprintf(os.Stderr, "Couldn't add %s to instrument: %v\n", fields[1], err)
 			}
 		}
 	}
