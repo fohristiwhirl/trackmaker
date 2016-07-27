@@ -1,5 +1,8 @@
-
+piano   E2      Piano.ff.E2.wav
+piano   Bb2     Piano.ff.Bb2.wav
+piano   Db3     Piano.ff.Db3.wav
 piano   G3      Piano.ff.G3.wav
 piano   C4      Piano.ff.C4.wav
 piano   G4      Piano.ff.G4.wav
+piano   C5      Piano.ff.C5.wav
 
