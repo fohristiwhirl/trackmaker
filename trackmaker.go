@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fohristiwhirl/wavmaker"
 )
@@ -38,10 +40,11 @@ type Instrument struct {
 
 type ParserState struct {
 	line uint32					// current line in score
+	position uint32				// position in samples e.g. 44100 means 1 second in
+	jump uint32
 	instrument_name string
 	volume float64
-	position uint32				// in samples
-	jump uint32
+	drunk int32
 }
 
 var instruments = make(map[string]*Instrument)
@@ -73,6 +76,11 @@ func (instrument *Instrument) addfile(notestring string, filename string) error 
 
 
 // ---------------------------------------------------------- FUNCTIONS
+
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+}
 
 
 func main() {
@@ -151,12 +159,10 @@ func score_to_wav(filename string) {
 }
 
 
-func initial_parser_state() ParserState {
+func initial_parser_state() ParserState {		// Set all things that need to be non-zero
 	var s = ParserState{
-			line : 0,
 			instrument_name : default_instrument_name,
 			volume : 1.0,
-			position : 0,
 			jump : 11025,
 	}
 	return s
@@ -252,6 +258,18 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 				continue
 			}
 
+			// drunk setting? (random delay before playing a note) ----------------------------- e.g. d:300
+
+			if strings.HasPrefix(token, "d:") {
+				d, err := strconv.Atoi(token[2:])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", relevant_state.line, token)
+				} else {
+					relevant_state.drunk = int32(d)
+				}
+				continue
+			}
+
 			// volume setting? (as a float where 1.0 means normal) ----------------------------- e.g. v:0.5
 
 			if strings.HasPrefix(token, "v:") {
@@ -273,7 +291,13 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 			// The token is a note...
 
 			if output_wav != nil {
-				err = insert_by_name(relevant_state.instrument_name, relevant_state.volume, token, output_wav, relevant_state.position)
+				err = insert_by_name(
+					relevant_state.instrument_name,
+					relevant_state.volume,
+					token,
+					output_wav,
+					relevant_state.position + uint32(safe_int31n(relevant_state.drunk)),
+				)
 				if err != nil {
 					fmt.Printf("line %d: %v\n", relevant_state.line, err)
 				}
@@ -283,6 +307,14 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 
 	global_state.line += 1
 	global_state.position += global_state.jump
+}
+
+
+func safe_int31n(n int32) int32 {
+	if n <= 0 {
+		return 0
+	}
+	return rand.Int31n(n)
 }
 
 
