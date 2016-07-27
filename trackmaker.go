@@ -44,7 +44,8 @@ type ParserState struct {
 	jump uint32
 	instrument_name string
 	volume float64
-	drunk int32
+	drunk int32					// signed is correct since the rand.Int31n takes an int32 arg
+	offset uint32
 }
 
 var instruments = make(map[string]*Instrument)
@@ -258,6 +259,18 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 				continue
 			}
 
+			// offset setting ------------------------------------------------------------------ e.g. o:2000
+
+			if strings.HasPrefix(token, "o:") {
+				o, err := strconv.Atoi(token[2:])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", relevant_state.line, token)
+				} else {
+					relevant_state.offset = uint32(o)
+				}
+				continue
+			}
+
 			// drunk setting? (random delay before playing a note) ----------------------------- e.g. d:300
 
 			if strings.HasPrefix(token, "d:") {
@@ -296,7 +309,7 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 					relevant_state.volume,
 					token,
 					output_wav,
-					relevant_state.position + uint32(safe_int31n(relevant_state.drunk)),
+					relevant_state.position + uint32(safe_int31n(relevant_state.drunk)) + relevant_state.offset,
 				)
 				if err != nil {
 					fmt.Printf("line %d: %v\n", relevant_state.line, err)
