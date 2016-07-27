@@ -14,6 +14,8 @@ from pygame.locals import *
 INPUT_FILENAME = "score.txt"
 OUTPUT_FILENAME = "score.txt"
 
+FILE_START = "v:0.4 j:8500"
+
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 420
 
@@ -188,6 +190,7 @@ class Score (object):
 
 	def save(self, filename):
 		outfile = open(filename, "w")
+		outfile.write(FILE_START + " ")
 		for staff in self.staffs:
 			for bar in staff.bars:
 				for loc in bar.locations:

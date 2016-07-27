@@ -1,4 +1,0 @@
-piano   C4      Piano.ff.C4.wav
-piano   G4      Piano.ff.G4.wav
-
-drum    C3      Bass-Drum-1.wav
