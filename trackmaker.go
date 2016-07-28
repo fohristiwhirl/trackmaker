@@ -46,6 +46,8 @@ type ParserState struct {
 	volume float64
 	drunk int32					// signed is correct since rand.Int31n() takes an int32 arg
 	offset uint32
+	length uint32
+	fadeout uint32
 }
 
 type Insertion struct {
@@ -54,6 +56,8 @@ type Insertion struct {
 	timing uint32				// "timing" is the position it would have if not for offsets caused by d: and o:
 	timing_adjusted uint32		// whereas "timing_adjusted" is the actual position in the target WAV.
 	volume float64
+	length uint32
+	fadeout uint32
 }
 
 var instruments = make(map[string]*Instrument)
@@ -181,7 +185,7 @@ func score_to_wav(filename string, outfilename string) {
 	output := wavmaker.New(all_inserts[z - 1].timing + 44100 * 5)		// 5 seconds grace period at end
 
 	for _, insert := range all_inserts {
-		err := insert_by_name(insert.instrument_name, insert.volume, insert.note_name, output, insert.timing_adjusted)
+		err := add_insert_to_wav(output, insert)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n")
 		}
@@ -197,6 +201,8 @@ func initial_parser_state() ParserState {		// Set all things that need to be non
 			instrument_name : default_instrument_name,
 			volume : 1.0,
 			jump : 11025,
+			length : 4294967295,		// max uint32, i.e. add the whole source wav when inserting
+			fadeout : 100,				// some fadeout is pretty useful
 	}
 	return s
 }
@@ -265,7 +271,7 @@ func handle_score_line(global_state *ParserState, text string) []Insertion {
 				continue
 			}
 
-			// offset setting ------------------------------------------------------------------ e.g. o:2000
+			// offset setting? ----------------------------------------------------------------- e.g. o:2000
 
 			if strings.HasPrefix(token, "o:") {
 				o, err := strconv.Atoi(token[2:])
@@ -301,6 +307,30 @@ func handle_score_line(global_state *ParserState, text string) []Insertion {
 				continue
 			}
 
+			// length setting? (i.e. how many frames to add from the source) ------------------- e.g. l:44100
+
+			if strings.HasPrefix(token, "l:") {
+				l, err := strconv.Atoi(token[2:])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", relevant_state.line, token)
+				} else {
+					relevant_state.length = uint32(l)
+				}
+				continue
+			}
+
+			// fadeout setting? (i.e. how many frames to fadeout IF we get close to the end) --- e.g. f:4000
+
+			if strings.HasPrefix(token, "f:") {
+				f, err := strconv.Atoi(token[2:])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "line %d: bad token \"%s\"\n", relevant_state.line, token)
+				} else {
+					relevant_state.fadeout = uint32(f)
+				}
+				continue
+			}
+
 			// We didn't figure out what the token means ---------------------------------------
 
 			fmt.Fprintf(os.Stderr, "line %d: unknown token \"%s\"\n", relevant_state.line, token)
@@ -315,6 +345,8 @@ func handle_score_line(global_state *ParserState, text string) []Insertion {
 					timing : relevant_state.position,
 					timing_adjusted : relevant_state.position + uint32(safe_int31n(relevant_state.drunk)) + relevant_state.offset,
 					volume : relevant_state.volume,
+					length : relevant_state.length,
+					fadeout : relevant_state.fadeout,
 				})
 		}
 	}
@@ -334,22 +366,22 @@ func safe_int31n(n int32) int32 {
 }
 
 
-func insert_by_name(instrument_name string, volume float64, note_name string, target_wav *wavmaker.WAV, t_loc uint32) error {
+func add_insert_to_wav(target_wav *wavmaker.WAV, insert Insertion) error {
 
 	// Get the named instrument from the global instruments map,
 	// and insert it into the wav with the given note, creating
 	// that note if needed...
 
-	i, ok := instruments[instrument_name]
+	i, ok := instruments[insert.instrument_name]
 	if ok == false {
-		return fmt.Errorf("insert_by_name() couldn't find instrument \"%s\"", instrument_name)
+		return fmt.Errorf("insert_by_name() couldn't find instrument \"%s\"", insert.instrument_name)
 	}
 
 	if i.ready == false {
 		return fmt.Errorf("insert_by_name() called on an empty instrument")
 	}
 
-	note, err := name_to_midi(note_name)		// A number between 0 and 127 (MIDI value corresponding to note)
+	note, err := name_to_midi(insert.note_name)		// A number between 0 and 127 (MIDI value corresponding to note)
 	if err != nil {
 		return fmt.Errorf("insert_by_name(): %v", err)
 	}
@@ -390,7 +422,7 @@ func insert_by_name(instrument_name string, volume float64, note_name string, ta
 		i.notes[note] = i.notes[note_to_stretch].StretchedRelative(ref_freq / ins_freq)
 	}
 
-	target_wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount(), volume, 0)
+	target_wav.Add(insert.timing_adjusted, i.notes[note], 0, insert.length, insert.volume, insert.fadeout)
 	return nil
 }
 
