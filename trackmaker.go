@@ -105,7 +105,7 @@ func main() {
 	}
 
 	load_instruments("instruments.txt")
-	score_to_wav("score.txt")
+	score_to_wav("score.txt", "trackmaker_output.wav")
 }
 
 
@@ -149,7 +149,7 @@ func load_instruments(filename string) {
 }
 
 
-func score_to_wav(filename string) {
+func score_to_wav(filename string, outfilename string) {
 
 	score_file, err := os.Open(filename)
 	if err != nil {
@@ -188,7 +188,7 @@ func score_to_wav(filename string) {
 	}
 
 	output.FadeSamples(44100)
-	output.Save("trackmaker_output.wav")
+	output.Save(outfilename)
 }
 
 
@@ -390,7 +390,7 @@ func insert_by_name(instrument_name string, volume float64, note_name string, ta
 		i.notes[note] = i.notes[note_to_stretch].StretchedRelative(ref_freq / ins_freq)
 	}
 
-	target_wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount(), volume)
+	target_wav.Add(t_loc, i.notes[note], 0, i.notes[note].FrameCount(), volume, 0)
 	return nil
 }
 
