@@ -181,7 +181,10 @@ func score_to_wav(filename string) {
 	output := wavmaker.New(all_inserts[z - 1].timing + 44100 * 5)		// 5 seconds grace period at end
 
 	for _, insert := range all_inserts {
-		insert_by_name(insert.instrument_name, insert.volume, insert.note_name, output, insert.timing_adjusted)
+		err := insert_by_name(insert.instrument_name, insert.volume, insert.note_name, output, insert.timing_adjusted)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n")
+		}
 	}
 
 	output.FadeSamples(44100)
