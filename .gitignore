@@ -1,5 +1,5 @@
 *.exe
 *.wav
 *.lnk
-*.png
+entertainer/*.png
 entertainer/scoremaker.py
