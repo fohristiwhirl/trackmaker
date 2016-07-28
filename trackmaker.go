@@ -44,8 +44,16 @@ type ParserState struct {
 	jump uint32
 	instrument_name string
 	volume float64
-	drunk int32					// signed is correct since the rand.Int31n takes an int32 arg
+	drunk int32					// signed is correct since rand.Int31n() takes an int32 arg
 	offset uint32
+}
+
+type Insertion struct {
+	instrument_name string
+	note_name string
+	timing uint32				// "timing" is the position it would have if not for offsets caused by d: and o:
+	timing_adjusted uint32		// whereas "timing_adjusted" is the actual position in the target WAV.
+	volume float64
 }
 
 var instruments = make(map[string]*Instrument)
@@ -143,17 +151,38 @@ func load_instruments(filename string) {
 
 func score_to_wav(filename string) {
 
-	output, score_file := initial_score_load(filename)
+	score_file, err := os.Open(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Couldn't read %s\n", filename)
+		os.Exit(1)
+	}
 	defer score_file.Close()
+
+	// Parsing phase...
 
 	parser_state := initial_parser_state()
 	scanner := bufio.NewScanner(score_file)
 
+	all_inserts := make([]Insertion, 0)
+
 	for scanner.Scan() {
-		handle_score_line(&parser_state, scanner.Text(), output)
+		new_inserts := handle_score_line(&parser_state, scanner.Text())
+		all_inserts = append(all_inserts, new_inserts...)
 	}
 
-	// Fadeout and save...
+	// WAV creation phase...
+
+	z := len(all_inserts)
+	if z == 0 {
+		fmt.Fprintf(os.Stderr, "No valid inserts seen in the score.\n")
+		os.Exit(1)
+	}
+
+	output := wavmaker.New(all_inserts[z - 1].timing + 44100 * 5)		// 5 seconds grace period at end
+
+	for _, insert := range all_inserts {
+		insert_by_name(insert.instrument_name, insert.volume, insert.note_name, output, insert.timing_adjusted)
+	}
 
 	output.FadeSamples(44100)
 	output.Save("trackmaker_output.wav")
@@ -170,38 +199,12 @@ func initial_parser_state() ParserState {		// Set all things that need to be non
 }
 
 
-func initial_score_load(filename string) (*wavmaker.WAV, *os.File) {
+func handle_score_line(global_state *ParserState, text string) []Insertion {
 
-	// Create a wav file with the correct size for the score, and
-	// return a pointer to it as well as a pointer to the score file.
+	// This function uses the parser state to handle a line of text, adjusting the
+	// parser state and also returning all new inserts (i.e. notes) found.
 
-	// Load file...
-
-	score_file, err := os.Open(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't read %s\n", filename)
-		os.Exit(1)
-	}
-
-	// Determine expected WAV length by parsing score and updating a state struct...
-
-	parser_state := initial_parser_state()
-	scanner := bufio.NewScanner(score_file)
-
-	for scanner.Scan() {
-		handle_score_line(&parser_state, scanner.Text(), nil)
-	}
-
-	// Create output wav, and return it, along with the score file
-
-	output_wav := wavmaker.New(parser_state.position)
-
-	score_file.Seek(0, 0)		// Important: reset score file position
-	return output_wav, score_file
-}
-
-
-func handle_score_line(global_state *ParserState, text string, output_wav *wavmaker.WAV) {
+	new_inserts := make([]Insertion, 0)
 
 	// Since brackets are significant, make sure they are isolated for convenience...
 
@@ -303,23 +306,20 @@ func handle_score_line(global_state *ParserState, text string, output_wav *wavma
 
 			// The token is a note...
 
-			if output_wav != nil {
-				err = insert_by_name(
-					relevant_state.instrument_name,
-					relevant_state.volume,
-					token,
-					output_wav,
-					relevant_state.position + uint32(safe_int31n(relevant_state.drunk)) + relevant_state.offset,
-				)
-				if err != nil {
-					fmt.Printf("line %d: %v\n", relevant_state.line, err)
-				}
-			}
+			new_inserts = append(new_inserts, Insertion{
+					instrument_name : relevant_state.instrument_name,
+					note_name : token,
+					timing : relevant_state.position,
+					timing_adjusted : relevant_state.position + uint32(safe_int31n(relevant_state.drunk)) + relevant_state.offset,
+					volume : relevant_state.volume,
+				})
 		}
 	}
 
 	global_state.line += 1
 	global_state.position += global_state.jump
+
+	return new_inserts
 }
 
 
@@ -331,7 +331,7 @@ func safe_int31n(n int32) int32 {
 }
 
 
-func insert_by_name(instrument_name string, volume float64, notename string, target_wav *wavmaker.WAV, t_loc uint32) error {
+func insert_by_name(instrument_name string, volume float64, note_name string, target_wav *wavmaker.WAV, t_loc uint32) error {
 
 	// Get the named instrument from the global instruments map,
 	// and insert it into the wav with the given note, creating
@@ -346,7 +346,7 @@ func insert_by_name(instrument_name string, volume float64, notename string, tar
 		return fmt.Errorf("insert_by_name() called on an empty instrument")
 	}
 
-	note, err := name_to_midi(notename)		// A number between 0 and 127 (MIDI value corresponding to note)
+	note, err := name_to_midi(note_name)		// A number between 0 and 127 (MIDI value corresponding to note)
 	if err != nil {
 		return fmt.Errorf("insert_by_name(): %v", err)
 	}
