@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -109,7 +110,43 @@ func main() {
 	}
 
 	load_instruments("instruments.txt")
-	score_to_wav("score.txt", "trackmaker_output.wav")
+
+	filelist, err := ioutil.ReadDir(".")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
+	tracks := make([]*wavmaker.WAV, 0)
+
+	for _, fileinfo := range filelist {
+		filename := fileinfo.Name()
+		if strings.HasPrefix(strings.ToLower(filename), "track") || strings.HasPrefix(strings.ToLower(filename), "score") {
+			if strings.HasSuffix(strings.ToLower(filename), ".txt") {
+				tracks = append(tracks, score_to_wav(filename))
+			}
+		}
+	}
+
+	maxlen := uint32(0)
+
+	for _, track := range tracks {
+		if track.FrameCount() > maxlen {
+			maxlen = track.FrameCount()
+		}
+	}
+
+	output := wavmaker.New(maxlen)		// This is wasteful when there's only 1 track, but meh...
+
+	compile_start_time := time.Now().UTC()
+
+	for _, track := range tracks {
+		output.Add(0, track, 0, track.FrameCount(), 1.0, 0)
+	}
+
+	fmt.Printf("Compilation ... took %.2f seconds\n", time.Now().UTC().Sub(compile_start_time).Seconds())
+
+	output.Save("trackmaker_output.wav")
 }
 
 
@@ -153,7 +190,9 @@ func load_instruments(filename string) {
 }
 
 
-func score_to_wav(filename string, outfilename string) {
+func score_to_wav(filename string) *wavmaker.WAV {
+
+	start_time := time.Now().UTC()
 
 	score_file, err := os.Open(filename)
 	if err != nil {
@@ -192,7 +231,10 @@ func score_to_wav(filename string, outfilename string) {
 	}
 
 	output.FadeSamples(44100)
-	output.Save(outfilename)
+
+	fmt.Printf("\"%s\" ... WAV created in %.2f seconds\n", filename, time.Now().UTC().Sub(start_time).Seconds())
+
+	return output
 }
 
 
