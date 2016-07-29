@@ -54,10 +54,9 @@ type ParserState struct {
 type Insertion struct {
 	instrument_name string
 	note_name string
-	timing uint32				// "timing" is the position it would have if not for offsets caused by d: and o:
-	timing_adjusted uint32		// whereas "timing_adjusted" is the actual position in the target WAV.
+	timing uint32
 	volume float64
-	length uint32
+	length uint32				// might be (much) longer than the actual note
 	fadeout uint32
 }
 
@@ -117,35 +116,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	tracks := make([]*wavmaker.WAV, 0)
+	all_inserts := make([]Insertion, 0)
 
 	for _, fileinfo := range filelist {
 		filename := fileinfo.Name()
 		if strings.HasPrefix(strings.ToLower(filename), "track") || strings.HasPrefix(strings.ToLower(filename), "score") {
 			if strings.HasSuffix(strings.ToLower(filename), ".txt") {
-				tracks = append(tracks, score_to_wav(filename))
+				all_inserts = append(all_inserts, get_inserts_from_score(filename)...)
 			}
 		}
 	}
 
-	maxlen := uint32(0)
+	output_length := uint32(0)
 
-	for _, track := range tracks {
-		if track.FrameCount() > maxlen {
-			maxlen = track.FrameCount()
+	for _, insert := range all_inserts {
+		if insert.timing > output_length {
+			output_length = insert.timing		// Don't add insert.length which could be ridiculously long (no relation to note length)
 		}
 	}
 
-	output := wavmaker.New(maxlen)		// This is wasteful when there's only 1 track, but meh...
+	output := wavmaker.New(output_length + 44100 * 5)
 
-	compile_start_time := time.Now().UTC()
-
-	for _, track := range tracks {
-		output.Add(0, track, 0, track.FrameCount(), 1.0, 0)
+	for _, insert := range all_inserts {
+		err := add_insert_to_wav(output, insert)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n")
+		}
 	}
 
-	fmt.Printf("Compilation ... took %.2f seconds\n", time.Now().UTC().Sub(compile_start_time).Seconds())
-
+	output.FadeSamples(44100)
 	output.Save("trackmaker_output.wav")
 }
 
@@ -190,9 +189,7 @@ func load_instruments(filename string) {
 }
 
 
-func score_to_wav(filename string) *wavmaker.WAV {
-
-	start_time := time.Now().UTC()
+func get_inserts_from_score(filename string) []Insertion {
 
 	score_file, err := os.Open(filename)
 	if err != nil {
@@ -213,28 +210,7 @@ func score_to_wav(filename string) *wavmaker.WAV {
 		all_inserts = append(all_inserts, new_inserts...)
 	}
 
-	// WAV creation phase...
-
-	z := len(all_inserts)
-	if z == 0 {
-		fmt.Fprintf(os.Stderr, "No valid inserts seen in the score.\n")
-		os.Exit(1)
-	}
-
-	output := wavmaker.New(all_inserts[z - 1].timing + 44100 * 5)		// 5 seconds grace period at end
-
-	for _, insert := range all_inserts {
-		err := add_insert_to_wav(output, insert)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n")
-		}
-	}
-
-	output.FadeSamples(44100)
-
-	fmt.Printf("\"%s\" ... WAV created in %.2f seconds\n", filename, time.Now().UTC().Sub(start_time).Seconds())
-
-	return output
+	return all_inserts
 }
 
 
@@ -391,8 +367,7 @@ func handle_score_line(global_state *ParserState, text string) []Insertion {
 			new_inserts = append(new_inserts, Insertion{
 					instrument_name : relevant_state.instrument_name,
 					note_name : token,
-					timing : relevant_state.position,
-					timing_adjusted : relevant_state.position + uint32(safe_int31n(relevant_state.drunk)) + relevant_state.offset,
+					timing : relevant_state.position + uint32(safe_int31n(relevant_state.drunk)) + relevant_state.offset,
 					volume : relevant_state.volume,
 					length : relevant_state.length,
 					fadeout : relevant_state.fadeout,
@@ -471,7 +446,7 @@ func add_insert_to_wav(target_wav *wavmaker.WAV, insert Insertion) error {
 		i.notes[note] = i.notes[note_to_stretch].StretchedRelative(ref_freq / ins_freq)
 	}
 
-	target_wav.Add(insert.timing_adjusted, i.notes[note], 0, insert.length, insert.volume, insert.fadeout)
+	target_wav.Add(insert.timing, i.notes[note], 0, insert.length, insert.volume, insert.fadeout)
 	return nil
 }
 
