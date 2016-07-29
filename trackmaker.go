@@ -122,7 +122,8 @@ func main() {
 		filename := fileinfo.Name()
 		if strings.HasPrefix(strings.ToLower(filename), "track") || strings.HasPrefix(strings.ToLower(filename), "score") {
 			if strings.HasSuffix(strings.ToLower(filename), ".txt") {
-				all_inserts = append(all_inserts, get_inserts_from_score(filename)...)
+				new_inserts := get_inserts_from_score(filename)
+				all_inserts = append(all_inserts, new_inserts...)
 			}
 		}
 	}
