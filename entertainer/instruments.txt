@@ -2,17 +2,23 @@
 
 piano   E2      Piano.ff.E2.wav
 piano   Bb2     Piano.ff.Bb2.wav
+
 piano   Db3     Piano.ff.Db3.wav
 piano   E3      Piano.ff.E3.wav
 piano   G3      Piano.ff.G3.wav
 piano   Bb3     Piano.ff.Bb3.wav
+
 piano   Db4     Piano.ff.Db4.wav
 piano   E4      Piano.ff.E4.wav
 piano   G4      Piano.ff.G4.wav
 piano   A4      Piano.ff.A4.wav
+
 piano   Db5     Piano.ff.Db5.wav
 piano   E5      Piano.ff.E5.wav
 piano   G5      Piano.ff.G5.wav
 piano   Bb5     Piano.ff.Bb5.wav
+
 piano   Db6     Piano.ff.Db6.wav
 piano   E6      Piano.ff.E6.wav
+piano   G6      Piano.ff.G6.wav
+piano   Bb6     Piano.ff.Bb6.wav
