@@ -215,6 +215,13 @@ func handle_score_line(global_state *ParserState, text string) []Insertion {
 
 	new_inserts := make([]Insertion, 0)
 
+	// Comments start with //
+
+	comment_start := strings.Index(text, "//")
+	if comment_start != -1 {
+		text = text[0 : comment_start]
+	}
+
 	// Since brackets are significant, make sure they are isolated for convenience...
 
 	text = strings.Replace(text, "(", " ( ", -1)
