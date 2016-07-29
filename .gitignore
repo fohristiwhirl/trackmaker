@@ -3,3 +3,4 @@
 *.lnk
 entertainer/*.png
 entertainer/scoremaker.py
+tests/
