@@ -14,7 +14,7 @@ from pygame.locals import *
 INPUT_FILENAME = "score.txt"
 OUTPUT_FILENAME = "score.txt"
 
-FILE_START = "v:0.4 j:8500"
+FILE_START = ""
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 420
@@ -173,6 +173,8 @@ class Score (object):
 		bar_n = 0
 		notes_loc = 0
 		for t, line in enumerate(infile):
+			line = line.replace("(", "")
+			line = line.replace(")", "")
 			line = line.split()
 			for token in line:
 				if token in legal_inputs:
