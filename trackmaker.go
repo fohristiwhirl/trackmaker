@@ -147,6 +147,7 @@ func main() {
 
 	output.FadeSamples(44100)
 	output.Save("trackmaker_output.wav")
+	fmt.Printf("Output: %v\n", output)
 }
 
 
