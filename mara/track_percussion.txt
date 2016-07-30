@@ -1,514 +1,514 @@
-v:0.35 j:3000 l:6000    (closed C4)      (drum C4)
+v:0.35 j:3000 l:6000    closed C4      (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
-(closed C4)
+C4
 
-(closed C4)
+C4
 
-(open l:6000 C4)
+(open C4)
 
-(closed C4)              (drum C4)
+C4              (drum C4)
 
