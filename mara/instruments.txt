@@ -1,0 +1,16 @@
+
+bass    C2      ../Instruments/Bass/Bowed-Bass-C2.wav
+
+drum    C4      ../Instruments/Percussion/Bass-Drum-3.wav
+open    C4      ../Instruments/Percussion/Open-Hi-Hat-1.wav
+closed  C4      ../Instruments/Percussion/Closed-Hi-Hat-5.wav
+
+
+piano   Db3     ../Instruments/Piano/Piano.ff.Db3.wav
+piano   E3      ../Instruments/Piano/Piano.ff.E3.wav
+piano   G3      ../Instruments/Piano/Piano.ff.G3.wav
+piano   Bb3     ../Instruments/Piano/Piano.ff.Bb3.wav
+piano   Db4     ../Instruments/Piano/Piano.ff.Db4.wav
+piano   E4      ../Instruments/Piano/Piano.ff.E4.wav
+piano   G4      ../Instruments/Piano/Piano.ff.G4.wav
+piano   A4      ../Instruments/Piano/Piano.ff.A4.wav
