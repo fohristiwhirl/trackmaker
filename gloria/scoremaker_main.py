@@ -11,10 +11,10 @@
 import pygame, sys
 from pygame.locals import *
 
-INPUT_FILENAME = "score.txt"
-OUTPUT_FILENAME = "score.txt"
+INPUT_FILENAME = "score_main.txt"
+OUTPUT_FILENAME = "score_main.txt"
 
-FILE_START = "j:6500"
+FILE_START = "d:1000 j:5750"
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 420
